@@ -5,9 +5,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BlogApi.Controllers
 {
-	[ApiController] // Marks this as an API controller (automatic model validation, binding, etc.)
-	[Route("api/v{version:apiVersion}/[controller]")]
-	[ApiVersion("1.0")] // We’re versioning our APIs (v1 for now)
+	[ApiController]
+	[Route("api/[controller]")]
 	public class CommentsController : ControllerBase
 	{
 		private readonly ICommentService _commentService;
@@ -47,7 +46,6 @@ namespace BlogApi.Controllers
 		{
 			var comment = await _commentService.CreateAsync(dto);
 			return CreatedAtAction(nameof(GetById), new { id = comment.Id }, comment);
-			// Returns 201 + location header
 		}
 
 		/// <summary>
