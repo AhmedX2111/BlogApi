@@ -1,8 +1,10 @@
 ﻿using BlogApi.Data;
+using BlogApi.Middleware;
 using BlogApi.Services.Implementations;
 using BlogApi.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Threading.RateLimiting;
 
 namespace BlogApi
 {
@@ -21,6 +23,25 @@ namespace BlogApi
 				options.AssumeDefaultVersionWhenUnspecified = true;         // Default if version not specified
 				options.DefaultApiVersion = new ApiVersion(1, 0);           // Default = v1.0
 				options.ReportApiVersions = true;                           // Returns version info in headers
+			});
+			builder.Services.AddRateLimiter(options =>
+			{
+				options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
+				{
+					// Use client IP as key
+					var ip = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+
+					return RateLimitPartition.GetFixedWindowLimiter(ip, key =>
+						new FixedWindowRateLimiterOptions
+						{
+							PermitLimit = 100,
+							Window = TimeSpan.FromMinutes(1),
+							QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+							QueueLimit = 50
+						});
+				});
+
+				options.RejectionStatusCode = 429;
 			});
 
 			builder.Services.AddScoped<IAuthorService, AuthorService>();
@@ -41,6 +62,10 @@ namespace BlogApi
 				app.UseSwagger();
 				app.UseSwaggerUI();
 			}
+
+			app.UseMiddleware<ErrorHandlingMiddleware>();
+
+			app.UseRateLimiter();
 
 			app.UseHttpsRedirection();
 

@@ -16,59 +16,87 @@ namespace BlogApi.Services.Implementations
 		}
 		public async Task<IEnumerable<AuthorDto>> GetAllAsync()
 		{
-			return await _context.Authors
-				.Select(a => new AuthorDto(a.Id, a.Name, a.Email, a.Bio, a.JoinDate))
-				.ToListAsync();
+			try
+			{
+				return await _context.Authors
+					.Select(a => new AuthorDto(a.Id, a.Name, a.Email, a.Bio, a.JoinDate))
+					.ToListAsync();
+			}
+			catch (Exception ex)
+			{
+				throw new Exception("Error retrieving authors", ex);
+			}
 		}
 
 		public async Task<AuthorDto?> GetByIdAsync(int id)
 		{
-			var author = await _context.Authors.FindAsync(id);
-			if (author == null) return null;
-
-
-			return new AuthorDto(author.Id, author.Name, author.Email, author.Bio, author.JoinDate);
+			try
+			{
+				var author = await _context.Authors.FindAsync(id);
+				if (author == null) return null;
+				return new AuthorDto(author.Id, author.Name, author.Email, author.Bio, author.JoinDate);
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error retrieving author with id {id}", ex);
+			}
 		}
 
 		public async Task<AuthorDto> CreateAsync(CreateAuthorDto dto)
 		{
-			var author = new Author
+			try
 			{
-				Name = dto.Name,
-				Email = dto.Email,
-				Bio = dto.Bio,
-				JoinDate = DateTime.UtcNow
-			};
-
-			_context.Authors.Add(author);
-			await _context.SaveChangesAsync();
-
-			return new AuthorDto (author.Id, author.Name, author.Email, author.Bio, author.JoinDate);
+				var author = new Author
+				{
+					Name = dto.Name,
+					Email = dto.Email,
+					Bio = dto.Bio,
+					JoinDate = DateTime.UtcNow
+				};
+				_context.Authors.Add(author);
+				await _context.SaveChangesAsync();
+				return new AuthorDto(author.Id, author.Name, author.Email, author.Bio, author.JoinDate);
+			}
+			catch (Exception ex)
+			{
+				throw new Exception("Error creating author", ex);
+			}
 		}
 
 		public async Task<AuthorDto?> UpdateAuthorAsync(int id, UpdateAuthorDto dto)
 		{
-			var author = await _context.Authors.FindAsync(id);
-			if (author == null) return null;
+			try
+			{
+				var author = await _context.Authors.FindAsync(id);
+				if (author == null) return null;
 
-			author.Name = dto.Name;
-			author.Email = dto.Email;
-			author.Bio = dto.Bio;
+				author.Name = dto.Name;
+				author.Email = dto.Email;
+				author.Bio = dto.Bio;
 
-			await _context.SaveChangesAsync();
-
-			return new AuthorDto(author.Id, author.Name, author.Email, author.Bio, author.JoinDate);
+				await _context.SaveChangesAsync();
+				return new AuthorDto(author.Id, author.Name, author.Email, author.Bio, author.JoinDate);
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error updating author with id {id}", ex);
+			}
 		}
 
 		public async Task<bool> DeleteAsync(int id)
 		{
-			var author = await _context.Authors.FindAsync(id);
-			if (author == null) return false;
+			try
+			{
+				var author = await _context.Authors.FindAsync(id);
+				if (author == null) return false;
 
-			_context.Authors.Remove(author);
-			await _context.SaveChangesAsync();
-
-			return true;
-		}
-	}
+				_context.Authors.Remove(author);
+				await _context.SaveChangesAsync();
+				return true;
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error deleting author with id {id}", ex);
+			}
+	}	}
 }

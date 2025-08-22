@@ -16,7 +16,9 @@ namespace BlogApi.Services.Implementations
 		}
 		public async Task<IEnumerable<PostDto>> GetAllPostsAsync()
 		{
-			return await _context.Posts
+			try
+			{
+				return await _context.Posts
 				.Select(p => new PostDto(
 					p.Id,
 					p.Title,
@@ -26,56 +28,89 @@ namespace BlogApi.Services.Implementations
 					p.AuthorId
 				))
 				.ToListAsync();
+			}
+			catch (Exception ex)
+			{
+				throw new Exception("Error retrieving posts", ex);
+			}
+
 		}
 
 		public async Task<PostDto?> GetPostByIdAsync(int id)
 		{
-			var post = await _context.Posts.FindAsync(id);
+			try
+			{
+				var post = await _context.Posts.FindAsync(id);
+				if (post == null) return null;
 
-			return post == null
-				? null
-				: new PostDto(post.Id, post.Title, post.Content, post.CreatedDate, post.UpdatedDate, post.AuthorId);
+				return new PostDto(post.Id, post.Title, post.Content, post.CreatedDate, post.UpdatedDate, post.AuthorId);
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error retrieving post with id {id}", ex);
+			}
 		}
 
 		public async Task<PostDto> CreatePostAsync(CreatePostDto dto)
 		{
-			var post = new Post
+			try
 			{
-				Title = dto.Title,
-				Content = dto.Content,
-				AuthorId = dto.AuthorId,
-				CreatedDate = DateTime.UtcNow
-			};
+				var post = new Post
+				{
+					Title = dto.Title,
+					Content = dto.Content,
+					AuthorId = dto.AuthorId,
+					CreatedDate = DateTime.UtcNow
+				};
 
-			_context.Posts.Add(post);
-			await _context.SaveChangesAsync();
+				_context.Posts.Add(post);
+				await _context.SaveChangesAsync();
 
-			return new PostDto(post.Id, post.Title, post.Content, post.CreatedDate, post.UpdatedDate, post.AuthorId);
+				return new PostDto(post.Id, post.Title, post.Content, post.CreatedDate, post.UpdatedDate, post.AuthorId);
+			}
+			catch (Exception ex)
+			{
+				throw new Exception("Error creating post", ex);
+			}
 		}
 
 		public async Task<PostDto?> UpdatePostAsync(int id, UpdatePostDto dto)
 		{
-			var post = await _context.Posts.FindAsync(id);
-			if (post == null) return null;
+			try
+			{
+				var post = await _context.Posts.FindAsync(id);
+				if (post == null) return null;
 
-			post.Title = dto.Title;
-			post.Content = dto.Content;
-			post.UpdatedDate = DateTime.UtcNow;
+				post.Title = dto.Title;
+				post.Content = dto.Content;
+				post.UpdatedDate = DateTime.UtcNow;
 
-			await _context.SaveChangesAsync();
+				await _context.SaveChangesAsync();
 
-			return new PostDto(post.Id, post.Title, post.Content, post.CreatedDate, post.UpdatedDate, post.AuthorId);
+				return new PostDto(post.Id, post.Title, post.Content, post.CreatedDate, post.UpdatedDate, post.AuthorId);
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error updating post with id {id}", ex);
+			}
 		}
 
 		public async Task<bool> DeletePostAsync(int id)
 		{
-			var post = await _context.Posts.FindAsync(id);
-			if (post == null) return false;
+			try
+			{
+				var post = await _context.Posts.FindAsync(id);
+				if (post == null) return false;
 
-			_context.Posts.Remove(post);
-			await _context.SaveChangesAsync();
+				_context.Posts.Remove(post);
+				await _context.SaveChangesAsync();
 
-			return true;
+				return true;
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error deleting post with id {id}", ex);
+			}
 		}
 	}
 }

@@ -17,49 +17,76 @@ namespace BlogApi.Services.Implementations
 
 		public async Task<IEnumerable<CommentDto>> GetByPostIdAsync(int postId)
 		{
-			return await _context.Comments
-				.Where(c => c.PostId == postId)
-				.Select(c => new CommentDto(c.Id, c.Content, c.CreatedDate, c.AuthorId, c.PostId))
-				.ToListAsync();
+			try
+			{
+				return await _context.Comments
+					.Where(c => c.PostId == postId)
+					.Select(c => new CommentDto(c.Id, c.Content, c.CreatedDate, c.AuthorId, c.PostId))
+					.ToListAsync();
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error retrieving comments for post id {postId}", ex);
+			}
 		}
 
 		public async Task<CommentDto> CreateAsync(CreateCommentDto dto)
 		{
-			var comment = new Comment
+			try
 			{
-				Content = dto.Content,
-				CreatedDate = DateTime.UtcNow,
-				AuthorId = dto.AuthorId,
-				PostId = dto.PostId
-			};
+				var comment = new Comment
+				{
+					Content = dto.Content,
+					CreatedDate = DateTime.UtcNow,
+					AuthorId = dto.AuthorId,
+					PostId = dto.PostId
+				};
 
-			_context.Comments.Add(comment);
-			await _context.SaveChangesAsync();
+				_context.Comments.Add(comment);
+				await _context.SaveChangesAsync();
 
-			return new CommentDto(comment.Id, comment.Content, comment.CreatedDate, comment.AuthorId, comment.PostId);
+				return new CommentDto(comment.Id, comment.Content, comment.CreatedDate, comment.AuthorId, comment.PostId);
+			}
+			catch (Exception ex)
+			{
+				throw new Exception("Error creating comment", ex);
+			}
 		}
 
 		public async Task<CommentDto?> UpdateAsync(int id, UpdateCommentDto dto)
 		{
-			var comment = await _context.Comments.FindAsync(id);
-			if (comment == null) return null;
+			try
+			{
+				var comment = await _context.Comments.FindAsync(id);
+				if (comment == null) return null;
 
-			comment.Content = dto.Content;
+				comment.Content = dto.Content;
+				await _context.SaveChangesAsync();
 
-			await _context.SaveChangesAsync();
-
-			return new CommentDto(comment.Id, comment.Content, comment.CreatedDate, comment.AuthorId, comment.PostId);
+				return new CommentDto(comment.Id, comment.Content, comment.CreatedDate, comment.AuthorId, comment.PostId);
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error updating comment with id {id}", ex);
+			}
 		}
 
 		public async Task<bool> DeleteAsync(int id)
 		{
-			var comment = await _context.Comments.FindAsync(id);
-			if (comment == null) return false;
+			try
+			{
+				var comment = await _context.Comments.FindAsync(id);
+				if (comment == null) return false;
 
-			_context.Comments.Remove(comment);
-			await _context.SaveChangesAsync();
+				_context.Comments.Remove(comment);
+				await _context.SaveChangesAsync();
 
-			return true;
+				return true;
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error deleting comment with id {id}", ex);
+			}
 		}
 	}
 }
